@@ -338,6 +338,38 @@
   background-color: #845695;
 }
 
+#stats {
+  width: 100%;
+  height: 200%;
+ /* overflow-y: auto; */
+  overflow:scroll;
+  display: none;
+}
+
+#stat__form {
+  width: 46.0rem;
+  position: fixed;
+  bottom: 7rem;
+  display: block;
+  background-color: #1a1a1a;
+  padding: 1em;
+}
+
+#stat__form input {
+  color: #fff;
+  width: 100%;
+  border: none;
+  border-radius: 5px;
+  padding: 18px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #3f434a;
+}
+
+#stat__form input:focus {
+  outline: none;
+}
+
 #join-btn{
   background-color: #845695;
   font-size: 18px;
