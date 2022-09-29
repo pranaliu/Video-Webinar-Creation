@@ -1,5 +1,5 @@
 import AgoraRTC from "agora-rtc-sdk-ng";
-import { app_data } from "./env.js";
+import { app_data } from "../js/env.js";
 
 let rtc = {
     // For the local audio and video tracks.

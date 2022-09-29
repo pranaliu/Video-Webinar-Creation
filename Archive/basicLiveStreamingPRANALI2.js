@@ -1,5 +1,5 @@
 import AgoraRTC from "agora-rtc-sdk-ng";
-import { app_data } from "./env.js";
+import { app_data } from "../js/env.js";
 
 let rtc = {
     // For the local audio and video tracks.
@@ -7,10 +7,15 @@ let rtc = {
     localVideoTrack: null,
     client: null
 };
-let rtcUid = Math.floor(Math.random() * 232);
 
-var remoteUsers = {};
 
+
+let uid = sessionStorage.getItem('uid');
+if(!uid){
+    uid = Math.floor(Math.random() * 232);
+    sessionStorage.setItem('uid', uid)
+}
+//let rtcUid = Math.floor(Math.random() * 232);
 let options = {
     // Pass your app ID here.
     appId: app_data.appID,
@@ -21,64 +26,66 @@ let options = {
     // Use a temp token
     token: app_data.token,
     // Uid
-    uid: rtcUid,
+    uid: uid,
 };
 
+let client;
+let rtmClient;
+let channel;
+
+ //Declare Variables for Live streaming and initialize
+let localTracks = []
+let remoteUsers = {}
+
+let localScreenTracks;
+let sharingScreen = false;
+let streaming = false;
+
+
+
+//roomId = channel
 
 let clientRoleOptions = {
     // Set latency level to low latency
     level: 1
 }
 
+
+
 async function startBasicLiveStreaming() {
 
     rtc.client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
-      //Declare Variables for Live streaming and initialize
-  let streaming = false;
-  let shareScreen = false;
-  //Check if needed localtracks PRANALI for screen sharing etc option
-  let localTracks = [];
-  let localScreenTracks;
+     
 
-    window.onload = function () {
-   
+    let joinRoomInit = async () => {   
            document.getElementById("join").onclick = async function () {
            rtc.client.setClientRole(options.role, clientRoleOptions);
            await rtc.client.join(options.appId, options.channel, options.token, options.uid);
-         }
-       
-        let toggleStream = async () => {
-     
-            if (!streaming) {
-              alert("PRANALI Stream is starting!");
-              streaming = true;
-              document.getElementById("stream_btn").innerText = "Stop Streaming";
-   
-             togglevideoshare();
-            } else {
-              streaming = false;
-              document.getElementById("stream_btn").innerText = "Start Streaming";
-            }
-          };
+         };
 
-           let togglevideoshare = () => {
-      rtc.client.setClientRole("host");
-      localTracks =  AgoraRTC.createMicrophoneAndCameraTracks(); //Ask user for access to Mic and Camera while joining the livestreaming
-      
-      //Create Video Player
-      //Define classes for Div in stylesheet
-      //let player = `<div class="video-container" id = "user-container-${rtcUid}">
-     // <div class="video-player id="user-${rtcUid}"></div>
-      //</div>`
-      let player = `<div class="">
-      New Container
-      </div>`
-    //PRANALI check on this  document.getElementById("video_stream").insertAdjacentHTML("beforebegin",player);
-   // localTracks[1].play(`user-${rtcUid}`);
-    //await rtc.client.publish(localTracks[0],localTracks[1]); //Check what is the aletrnative over here
-    };
+   joinRoomInit();      
 
-        document.getElementById("stream_btn").onclick = toggleStream;
+//On click of Join button display rest other buttons and hide join button
+        document.getElementById("join-btn").onclick = async function () {
+        document.getElementById('join-btn').style.display = 'none';
+        document.getElementsByClassName('stream__actions')[0].style.display = 'flex';
+    
+        //Access mic and camera of device for joining call
+        localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+    
+       //Create Video container html element with user-uid for unique id
+        let player = `<div class="video__container" id="user-container-${uid}">
+                        <div class="video-player" id="user-${uid}"></div>
+                     </div>`
+    //Insert html element to DOM
+        document.getElementById('streams__container').insertAdjacentHTML('beforeend', player);
+      //PRANALI check for expand video frame if needed
+      //  document.getElementById(`user-container-${uid}`).addEventListener('click', expandVideoFrame);
+    
+        localTracks[1].play(`user-${uid}`); //Add video track
+        await client.publish([localTracks[0], localTracks[1]]); //publish adio and video tracks
+       }
+ 
 
         document.getElementById("leave").onclick = async function () {
             // Traverse all remote users.
@@ -135,4 +142,5 @@ async function startBasicLiveStreaming() {
     });
 }
 
-startBasicLiveStreaming()
+
+startBasicLiveStreaming();
