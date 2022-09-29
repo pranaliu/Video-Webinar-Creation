@@ -1,6 +1,6 @@
 const app_data = {
-    appID: "a149f3bc348c4ee5b91d19ca72dd9365",
-    token: "007eJxTYJDWnKqx8Whv+uziKEGu+SpfJi7vqmPpkP2w6O+KmZ9lGwIVGCxTLNOSki3MDNLM0kxSLYyTUs0tTZKTzCyNLBPNDS1NPtqYJhf2mSUzbfrEysgAgSC+GINnXklqUWJySWZZqg8QB6cWF2fm5zEwAADjwygR",
-   channel:"InteractiveChatTest"
+  appID: "{AGORA_APPID}",
+  token: "{AGORA_TOKENID}",
+  channel: "{AGORA_CHANNEL_NAME}",
 };
 export { app_data };
