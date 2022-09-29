@@ -9,7 +9,8 @@ if (!uid) {
   sessionStorage.setItem("uid", uid);
 }
 //required data to join channel
-let token = app_data.token;
+//let token = app_data.token;
+let token = null;
 let appId = app_data.appID;
 let channel = app_data.channel;
 let role = "audience";
