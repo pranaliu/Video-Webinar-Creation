@@ -4,6 +4,8 @@ Live interactive stream application with chat functionality inbuilt providing in
 # How to build?
 * Please check the below pre-requisites to have your agora env ready.
 * After that, clone this repo code in to your local machine
+* Add your APPID, Channel Name from Agora Account into env.js file placeholders.
+* Keep token value : null
 * Run build command - npm run build
 * Start web project with command - rpm run start:dev
 * If your visual code does not start live server automatically, then click on go live to start your web server
