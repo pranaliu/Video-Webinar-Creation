@@ -2,6 +2,7 @@ import AgoraRTC from "agora-rtc-sdk-ng";
 import AgoraRTM from "./agora-rtm-sdk-1.5.1.js";
 import { app_data } from "./env.js";
 
+
 let uid = sessionStorage.getItem("uid");
 if (!uid) {
   //change uid to string for RTC method.
@@ -18,14 +19,15 @@ let audienceLatency = 1;
 
 let client;
 let rtcClient;
-let rtmClient;
 let rtcchannel;
+let rtmClient;
 var rtmchannel;
 
 let displayname = ""; //Check on users count to determine this
 
 let statsInterval;
 let stats = "";
+let displayStat = false;
 
 //Declare Variables for Live streaming and initialize
 let localTracks = [];
@@ -47,8 +49,6 @@ let joinRoomInit = async () => {
   client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
   AgoraRTC.enableLogUpload();
 
-  //joinChatinit();
-
   displayFrame = document.getElementById("stream__box");
   videoFrames = document.getElementsByClassName("video__container");
 };
@@ -67,7 +67,7 @@ let joinChatinit = async () => {
   //await rtmClient.login({uid,token});
   //Remove Token
   await rtmClient.login({ uid: uid });
-  await rtmClient.addOrUpdateLocalUserAttributes({'name':displayname});
+  await rtmClient.addOrUpdateLocalUserAttributes({ name: displayname });
   rtmchannel = await rtmClient.createChannel(channel);
   await rtmchannel.join();
   rtmchannel.on("MemberJoined", handleMemberJoined);
@@ -80,7 +80,7 @@ let joinHostStream = async () => {
   document.getElementById("join-btn").style.display = "none";
   document.getElementById("join-host-btn").style.display = "none";
   document.getElementsByClassName("stream__actions")[0].style.display = "flex";
-  document.getElementById("stats").style.display = "flex";
+  //document.getElementById("stats").style.display = "flex";
   client.setClientRole("host");
   role = "host";
   joinChatinit();
@@ -101,14 +101,14 @@ let joinHostStream = async () => {
 
   console.log("publish success");
 
-  initStats();
+  //initStats();
 };
 
 let joinStream = async () => {
   document.getElementById("join-btn").style.display = "none";
   document.getElementById("join-host-btn").style.display = "none";
   document.getElementsByClassName("stream__actions")[0].style.display = "flex";
-  document.getElementById("stats").style.display = "flex";
+  // document.getElementById("stats").style.display = "flex";
   if (role === "audience") {
     client.setClientRole(role, { level: audienceLatency });
     role = "audience";
@@ -121,7 +121,7 @@ let joinStream = async () => {
   } else {
     client.setClientRole(role);
   }
-  initStats();
+
 
   //For Audience just ignore players for now
   // localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
@@ -195,6 +195,18 @@ let handleUserLeft = async (user) => {
       videoFrames[i].style.height = "300px";
       videoFrames[i].style.width = "300px";
     }
+  }
+};
+
+let toggleCallStat = async (e) => {
+  let button = e.currentTarget;
+  displayStat = !displayStat;
+  if (!displayStat) {
+    destructStats();
+    button.classList.add("active");
+  } else {
+    button.classList.remove("active");
+    initStats();
   }
 };
 
@@ -275,6 +287,10 @@ let leaveStream = async (e) => {
   document.getElementById("join-host-btn").style.display = "block";
   document.getElementsByClassName("stream__actions")[0].style.display = "none";
   document.getElementById("stats").style.display = "none";
+  //Disable message area
+  document.getElementById("messagetextbox").disabled = true;
+
+  //handleMemberLeft
 
   for (let i = 0; localTracks.length > i; i++) {
     localTracks[i].stop();
@@ -293,18 +309,21 @@ let leaveStream = async (e) => {
   }
   //Destruct collected in call stats
   destructStats();
+  //PRANALI add message on user left
+  rtmchannel.sendMessage({
+    text: JSON.stringify({ type: "user_left", displayName: displayname }),
+  });
+
   //Leave the communication channel
+  //await leaveChannel();
   await leaveChannel();
 
   await client.leave();
-  //PRANALI add message on user left
-  rtmchannel.sendMessage({
-    text: JSON.stringify({ type: "user_left", uid: uid }),
-  });
 };
 
 // start collect and show stats information
 let initStats = async () => {
+  document.getElementById("stats").style.display = "flex";
   statsInterval = setInterval(inCallStats, 1000);
 };
 
@@ -312,6 +331,7 @@ let initStats = async () => {
 let destructStats = async () => {
   clearInterval(statsInterval);
   document.getElementById("stattextarea").setAttribute("value", "");
+  document.getElementById("stats").style.display = "none";
 };
 
 //PRANALI Add get in call stat
@@ -558,6 +578,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("click", joinHostStream);
   document.getElementById("join-btn").addEventListener("click", joinStream);
   document.getElementById("leave-btn").addEventListener("click", leaveStream);
+  document
+    .getElementById("callstat-btn")
+    .addEventListener("click", toggleCallStat);
   let messageForm = document.getElementById("message__form");
   messageForm.addEventListener("submit", sendMessage);
 });
@@ -584,7 +607,7 @@ let addMemberToDom = async (MemberId) => {
 
   let memberItem = `<div class="member__wrapper" id="member__${MemberId}__wrapper">
                       <span class="green__icon"></span>
-                      <p class="member_name">${displayname}</p>
+                      <p class="member_name">user_${MemberId}</p>
                   </div>`;
 
   membersWrapper.insertAdjacentHTML("beforeend", memberItem);
@@ -596,6 +619,7 @@ let updateMemberTotal = async (members) => {
 };
 
 let handleMemberLeft = async (MemberId) => {
+  console.log("PRANALI we are in handleMemberLeft function");
   removeMemberFromDom(MemberId);
 
   let members = await rtmchannel.getMembers();
@@ -671,6 +695,8 @@ let getMembers = async () => {
 };
 
 let leaveChannel = async () => {
+  console.log("PRANALI We are in LeaveChannel function!");
+
   await rtmchannel.leave();
   await rtmClient.logout();
 };
