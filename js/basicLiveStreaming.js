@@ -28,6 +28,7 @@ let displayname = ""; //Check on users count to determine this
 let statsInterval;
 let stats = "";
 let displayStat = false;
+let handRaiseState = false;
 
 //Declare Variables for Live streaming and initialize
 let localTracks = [];
@@ -73,10 +74,12 @@ let joinChatinit = async () => {
   rtmchannel.on("MemberJoined", handleMemberJoined);
   rtmchannel.on("MemberLeft", handleMemberLeft);
   rtmchannel.on("ChannelMessage", handleChannelMessage);
+  rtmchannel.on("MessageFromPeer",handleMessageFromPeer);
   getMembers();
 };
 
 let joinHostStream = async () => {
+  console.log("PRANALI We are inside joinHostStream Function!");
   document.getElementById("join-btn").style.display = "none";
   document.getElementById("join-host-btn").style.display = "none";
   document.getElementsByClassName("stream__actions")[0].style.display = "flex";
@@ -108,6 +111,7 @@ let joinStream = async () => {
   document.getElementById("join-btn").style.display = "none";
   document.getElementById("join-host-btn").style.display = "none";
   document.getElementsByClassName("stream__actions")[0].style.display = "flex";
+  document.getElementById("raisehand-btn").style.display="flex";
   // document.getElementById("stats").style.display = "flex";
   if (role === "audience") {
     client.setClientRole(role, { level: audienceLatency });
@@ -122,7 +126,8 @@ let joinStream = async () => {
     client.setClientRole(role);
   }
 
-
+//Raise Hand Functionality
+document.getElementById("raisehand-btn").addEventListener("click", toggleHandRaise);
   //For Audience just ignore players for now
   // localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
 
@@ -280,9 +285,61 @@ let toggleScreen = async (e) => {
   }
 };
 
+let toggleHandRaise = async(e) =>{
+  let button = e.currentTarget;
+  //handRaiseState = !handRaiseState;
+  if (!handRaiseState) {
+    //If Hand raise is false
+    handRaiseState = true;
+    button.classList.add("active");
+    document.getElementById("raisehand-btn").innerText="Lower Hand";
+    console.log("PRANALI Hand raised.");
+    //Inform host on hand raise
+    await rtmchannel.sendMessage({
+      text: JSON.stringify({ type: "handraise", displayName: displayname, message:"raised" }),
+    }).then(() => {
+      console.log("PRANALI Message sent successfully.");
+      console.log("PRANALI Your message was: raised" + " sent by: " + displayname);
+  }).catch((err) => {
+      console.error("PRANALI Message sending failed: " + err);
+  })
+    
+    //Do nothing
+  } else {
+     //If Hand raise is true
+    handRaiseState = false;
+    button.classList.remove("active");
+    document.getElementById("raisehand-btn").innerText="Raise Hand";
+        //Send Message to host
+        console.log("PRANALI Hand lowered.");
+        //send host a message lowering hand
+
+        await rtmchannel.sendMessage({text: JSON.stringify({ type: "handraise", displayName: displayname, message:"lowered" }),}).then(() => {
+          console.log("PRANALI Message sent successfully.");
+          console.log("PRANALI Your message was: lowered" + " sent by: " + displayname);
+      }).catch((err) => {
+          console.error("PRANALI Message sending failed: " + err);
+      })
+   
+    //Once message is confirm change role to host
+    //Leave existing channel and join as host
+    //if Host declines request continue as adudience
+   /*
+ // Inform channel that rand was raised
+                    await channel.sendMessage({ text: "lowered" }).then(() => {
+                        console.log("Message sent successfully.");
+                        console.log("Your message was: lowered" + " sent by: " + accountName);
+                    }).catch((err) => {
+                        console.error("Message sending failed: " + err);
+                    })
+   */
+  }
+
+};
+
 let leaveStream = async (e) => {
   e.preventDefault();
-
+console.log("PRANALI we are inside LeaveStream Function!");
   document.getElementById("join-btn").style.display = "block";
   document.getElementById("join-host-btn").style.display = "block";
   document.getElementsByClassName("stream__actions")[0].style.display = "none";
@@ -290,7 +347,7 @@ let leaveStream = async (e) => {
   //Disable message area
   document.getElementById("messagetextbox").disabled = true;
 
-  //handleMemberLeft
+
 
   for (let i = 0; localTracks.length > i; i++) {
     localTracks[i].stop();
@@ -573,14 +630,10 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("camera-btn").addEventListener("click", toggleCamera);
   document.getElementById("mic-btn").addEventListener("click", toggleMic);
   document.getElementById("screen-btn").addEventListener("click", toggleScreen);
-  document
-    .getElementById("join-host-btn")
-    .addEventListener("click", joinHostStream);
+  document.getElementById("join-host-btn").addEventListener("click", joinHostStream);
   document.getElementById("join-btn").addEventListener("click", joinStream);
   document.getElementById("leave-btn").addEventListener("click", leaveStream);
-  document
-    .getElementById("callstat-btn")
-    .addEventListener("click", toggleCallStat);
+  document.getElementById("callstat-btn").addEventListener("click", toggleCallStat);
   let messageForm = document.getElementById("message__form");
   messageForm.addEventListener("submit", sendMessage);
 });
@@ -664,6 +717,97 @@ let handleChannelMessage = async (messageData, MemberId) => {
       displayFrame.style.display = null;
     }
   }
+  //Handle Hand Raise functionality here
+  if (data.type==="handraise" && role ==="host" ){
+    console.log("PRANALI Guest "+ data.displayName + " changed their hand raise state to " + data.message);
+    //Send Host a pop up box for host request
+    if(data.message==="raised"){
+      console.log("PRANALI we are in raised function block to show dialog box");
+      
+     // document.getElementById("confirm").style.display="block";
+//       document.getElementById("confirm").style.display = "flex";
+//       document.getElementById("promoteAccept").style.display="flex";
+//       document.getElementById("cancel").style.display="flex";
+//       document.getElementById("modal-body").innerText= data.displayName + " raised their hand. Do you want to make them a host?";
+//       let timeOff=1000;
+// setInterval(time, timeOff);
+// function time(){
+//       document.getElementById("confirm").getElementsByClassName("modal-footer")[0].click();
+
+//       document.getElementById("promoteAccept").addEventListener("click",acceptHost);
+//       document.getElementById("cancel").addEventListener("click",rejectHost);
+let confirmtext = data.displayName + " raised their hand. Do you want to make them a host?";
+
+if(confirm(confirmtext))
+{acceptHost();
+}
+else
+{rejectHost();
+}
+    
+
+    }
+    else {
+      console.log("PRANALI no hand is raised!");
+      //No Hand Raised!
+    }
+  }
+  };
+
+let acceptHost = async () => {
+  console.log("PRANALI we are in accept new host request!");
+
+
+     //send message to user on accepting the request
+      rtmchannel.client.sendMessageToPeer({text:JSON.stringify({"type":"acceptnewHost", "message":"host"})}, 
+      displayname,).then(sendResult => {
+      if (sendResult.hasPeerReceived) {
+          console.log("PRANALI Message has been received by: " + displayname + " Message: host");
+      } else {
+          console.log("PRANALI Message sent to: " + displayname + " Message: host");
+      }
+    
+  }).catch(error => {
+      console.log("PRANALI Error sending peer message: " + error);
+  });
+  // rtmchannel.client.sendMessageToPeer({text:JSON.stringify({"type":"acceptnewHost", "message":"host"})}, 
+  //     displayname);
+
+ //hide modal box
+ document.getElementById("confirm").style.display="none";
+     //leave the audience channel and join in as host channel    
+    
+};
+
+let rejectHost = () =>{
+  console.log("PRANALI we are in reject new host request!");
+//send message to audience request not accepted and continue on streaming as is
+rtmchannel.client.sendMessageToPeer({text:JSON.stringify({"type":"acceptnewHost", "message":"audience"})}, 
+displayname).then(sendResult => {
+if (sendResult.hasPeerReceived) {
+    console.log("PRANALI peer message Message has been received by: " + displayname + " Message: audience");
+} else {
+    console.log("PRANALI peer message Message sent to: " + displayname + " Message: audience");
+}
+}).catch(error => {
+console.log("PRANALI Error sending peer message: " + error);
+});
+     //hide modal box
+     //document.getElementById("confirm").style.display="none";
+};
+
+let handleMessageFromPeer = async (messageData, displayName) =>{
+  console.log("PRANALI inside handleMessageFromPeer frunction! ");
+  console.log( "PRANALI" + displayName + " your role changed to : " + messageData.message);
+  message = JSON.parse(messageData.text);
+   if(messageData.message === "host"){
+     console.log("PRANALI we are inside host message before leaving channel");
+    leaveStream();
+    client.joinHostStream();
+   }
+   if(messageData.message === "audience"){
+    console.log("PRANALI we are inside host message rejected channel");
+   }
 };
 
 let addMessageToDom = (name, message) => {

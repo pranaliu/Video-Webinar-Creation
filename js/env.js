@@ -1,6 +1,6 @@
 const app_data = {
-  appID: "{Your_APPID}",
+  appID: "{app_data}",
   token: null,
-  channel: "{YourChannelName}",
+  channel: "{chanel_name}",
 };
 export { app_data };
