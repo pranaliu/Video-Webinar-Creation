@@ -424,3 +424,22 @@
   border: 1px solid white;
   background: rgb(12, 157, 253);
 }
+
+.control-container{
+  /*background-color: rgb(179, 102, 249, .9);*/
+  background-color: #845695;
+  color: #fff;
+  padding: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.control-container img{
+    height: 30px;
+    width: 30px;
+ 
+
+}

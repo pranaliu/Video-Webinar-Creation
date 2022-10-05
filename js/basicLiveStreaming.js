@@ -292,7 +292,9 @@ let toggleHandRaise = async(e) =>{
     //If Hand raise is false
     handRaiseState = true;
     button.classList.add("active");
-    document.getElementById("raisehand-btn").innerText="Lower Hand";
+    //document.getElementById("raisehand-btn").innerText="Lower Hand";
+   // document.getElementById("raisehand-btn").src="../images/raised-hand-light.png";
+    <img src="images/raised-hand-light.png" />
     console.log("PRANALI Hand raised.");
     //Inform host on hand raise
     await rtmchannel.sendMessage({
@@ -309,7 +311,8 @@ let toggleHandRaise = async(e) =>{
      //If Hand raise is true
     handRaiseState = false;
     button.classList.remove("active");
-    document.getElementById("raisehand-btn").innerText="Raise Hand";
+    //document.getElementById("raisehand-btn").innerText="Raise Hand";
+   // document.getElementById("raisehand-btn").src="../images/raised-hand-icon.png";
         //Send Message to host
         console.log("PRANALI Hand lowered.");
         //send host a message lowering hand
