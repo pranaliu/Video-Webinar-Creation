@@ -1,5 +1,4 @@
-# Agora
-Live interactive stream application with chat functionality inbuilt providing in-call stats for local and remote tracks
+#Live interactive stream application with chat functionality inbuilt providing in-call stats for local and remote tracks
 
 # How to build?
 * Please check the below pre-requisites to have your agora env ready.
